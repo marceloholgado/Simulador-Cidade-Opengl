@@ -36,7 +36,7 @@ protected:
 public:
     Ponto pontosBezier[3];
     Poligono objeto3d;
-
+    
     Instancia() {
 
     }

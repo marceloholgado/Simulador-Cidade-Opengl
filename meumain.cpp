@@ -95,10 +95,11 @@ float alvoview_z = 0;
 #define COMBUSTIVEL 30
 
 // define quantidades 
-#define NUM_AVIOES 10
-#define NUM_ENEMIES 5
+#define NUM_AVIOES 1
+#define NUM_ENEMIES 1
 #define XCIDADE 15
 #define ZCIDADE 16
+#define FUEL 3
 
 // Matriz que armazena informacoes sobre o que existe na cidade
 Elemento Cidade[100][100];
@@ -108,8 +109,14 @@ TextReader *sketchCidade = new TextReader();
 // Objetos dos que representam os personagem do jogo
 Instancia avioesInimigos[NUM_AVIOES];
 Instancia Carrinho;
+Instancia FuelPump[FUEL];
+
 float anguloPositivoHelice = 45;
 float anguloNegativoHelice = -45;
+bool aumentax = true, diminuix = false;
+bool aumentaz = false, diminuiz = false;
+int x, z;
+
 
 // definicoes de algumas funcoes
 void PosicUser();
@@ -122,7 +129,8 @@ float passo = 0.5;
 Ponto Deslocamento;
 Ponto DirCarro;
 Ponto DirCamera;
-int OlhandoParaFrente = 1;              // Se 1 personagem esta olhando para frente senao esta mexendo a camera 
+bool OlhandoParaFrente = true;              // Se 1 personagem esta olhando para frente senao esta mexendo a camera 
+bool PilotoAutomatico = false;
 
 // Estruturas para armazenar as texturas de uma cidade
 // Constantes para indexar as texturas 
@@ -154,6 +162,7 @@ string nomeTexturas[] = {
     "texturas/ruas/linha1.png",
     "texturas/ruas/linha2.png",
     "texturas/ruas/rua.png"
+    "texturas/fuel.jpg"
 };
 int idTexturaRua[LAST_IMG];  // vetor com os identificadores das texturas
 
@@ -225,6 +234,12 @@ void InitializeCharacters(int posx, int posz) {
         avioesInimigos[i].setRotacao(180);
         avioesInimigos[i].setEscala(Ponto(0.4, 0.4, 0.4));
         avioesInimigos[i].setVelocidade(Ponto((Max.x - Min.x)/tempo,(Max.y - Min.y)/tempo,(Max.y - Min.y)/tempo));
+
+        avioesInimigos[i].setPosicao(Ponto(1+i, 4+i, 1+i));
+
+        avioesInimigos[i].pontosBezier[0] = Ponto (0, 4+i, 0);
+        avioesInimigos[i].pontosBezier[1] = Ponto (0, 4+i, 0);
+        avioesInimigos[i].pontosBezier[2] = Ponto (0, 4+i, 0);
     }
 
     Carrinho = Instancia();
@@ -236,6 +251,7 @@ void InitializeCharacters(int posx, int posz) {
 
     PosicaoObservador = Carrinho.getPosicao();
     DirObservador = Carrinho.getDirecao();
+    DirCamera = Carrinho.getDirecao();
 
     DefinesBezierCurves(true);
 }
@@ -261,14 +277,6 @@ void init(void)
         glEnable (GL_CULL_FACE );
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    
-    Curva1[0] = Ponto (1,3,10);
-    Curva1[1] = Ponto (1,3,4);
-    Curva1[2] = Ponto (1,3,-10);
-
-    Curva2[0] = Ponto (1,3,-10);
-    Curva2[1] = Ponto (1,3,4);
-    Curva2[2] = Ponto (1,3,10);
     
     srand((unsigned int)time(NULL));
     
@@ -320,7 +328,31 @@ void TracaBezier3Pontos()
 }
 // **********************************************************************
 void DefinesBezierCurves(bool curveDireciton) {
-    int cont = 0;
+
+    for (int i = 0; i < NUM_AVIOES; i++) {
+        if (curveDireciton) {
+            avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x + XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+ZCIDADE);
+            cout << "Indo\nPonto 0"; avioesInimigos[i].pontosBezier[0].imprime();
+            cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
+            cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
+        } else {
+            avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x - XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z-ZCIDADE);
+            cout << "Vindo\nPonto 0"; avioesInimigos[i].pontosBezier[0].imprime();
+            cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
+            cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
+         }
+        //cout << "Ponto 0"; avioesInimigos[i].pontosBezier[0].imprime();
+        //cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
+        //cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
+
+        cout << "\nPOSICAO AVIAO ";
+        avioesInimigos[i].getPosicao().imprime();
+        cout << "\n";
+    }
 }
 // **********************************************************************
 void AvancaComBezier()
@@ -335,11 +367,7 @@ void AvancaComBezier()
     }
 
     for (int i = 0; i < NUM_AVIOES; i++) {
-        if (way) {
-            avioesInimigos[i].setPosicao(CalculaBezier3(Curva1,t));
-        } else {
-            avioesInimigos[i].setPosicao(CalculaBezier3(Curva2,t));
-        }
+        avioesInimigos[i].setPosicao(CalculaBezier3(avioesInimigos[i].pontosBezier,t));
     }
 }
 // **********************************************************************
@@ -358,20 +386,29 @@ void animate()
     TempoTotal += dt;
     nFrames++;
 
-    if (AccumDeltaT > 1.0/30) // fixa a atualiza��o da tela em 30
+    if (AccumDeltaT > 1.0/60) // fixa a atualiza��o da tela em 30
     {
         AccumDeltaT = 0;
         angulo+= 1;
         glutPostRedisplay();
     }
     AnimateAndUpdateCharacters(dt);
+    if (PilotoAutomatico) {
+        Deslocamento.x = dt * Carrinho.getDirecao().x * passo;
+        Deslocamento.y = dt * Carrinho.getDirecao().y * passo;
+        Deslocamento.z = dt * Carrinho.getDirecao().z * passo;
+        Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
+        cout << "Carrinho Animando" << endl;
+        Carrinho.getPosicao().imprime();
+    }
+
     if (TempoTotal > 5.0)
     {
-        cout << "Tempo Acumulado: "  << TempoTotal << " segundos. " ;
-        cout << "Nros de Frames sem desenho: " << nFrames << endl;
-        cout << "FPS(sem desenho): " << nFrames/TempoTotal << endl;
-        TempoTotal = 0;
-        nFrames = 0;
+       //cout << "Tempo Acumulado: "  << TempoTotal << " segundos. " ;
+       //cout << "Nros de Frames sem desenho: " << nFrames << endl;
+       //cout << "FPS(sem desenho): " << nFrames/TempoTotal << endl;
+       //TempoTotal = 0;
+       //nFrames = 0;
     }
     TempoDaAnimacao += dt;
 }
@@ -421,7 +458,6 @@ void DesenhaCubo()
     glVertex3f(-1.0f,  1.0f, -1.0f);
     glEnd();
 }
-
 // **********************************************************************
 //  Desenha um pr�dio no meio de uam c�lula
 // **********************************************************************
@@ -461,6 +497,7 @@ void DesenhaLadrilho(int corBorda, int corDentro)
     //    glVertex3f( 0.5f,  0.0f, -0.5f);
     //glEnd();
 }
+
 void drawTextCord() {
     glBegin ( GL_QUADS );
         glNormal3f(0,1,0);
@@ -469,6 +506,33 @@ void drawTextCord() {
         glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.5f,  0.0f,  0.5f);
         glTexCoord2f(0.0f, 1.0f); glVertex3f( 0.5f,  0.0f, -0.5f);
     glEnd();
+}
+
+void drawFuelPumps() {
+    int x = 0;
+    bool desenha = false;
+    int valor;
+    for (int i = 0; i < XCIDADE; i++) {
+        for (int j = 0; j < ZCIDADE; j++) {
+            valor = rand() % XCIDADE;
+            if (valor % 2 == 0) {
+                desenha = true;
+            }
+            else {
+                desenha = false;
+            }
+            if (Cidade[i][j].tipo == RUA && x < FUEL && desenha) {
+                glPushMatrix();
+                    glTranslatef(i, 0, j);
+                    defineCor(White);
+                    glBindTexture(GL_TEXTURE_2D, idTexturaRua[LAST_IMG]);
+                    drawTextCord();
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                glPopMatrix();
+                x++;
+            }
+        }
+    }
 }
 
 // **********************************************************************
@@ -485,7 +549,7 @@ void DesenhaCidade()
         for (int j = 0; j < ZCIDADE; j++) {
             if (Cidade[i][j].tipo == RUA) {
                 glPushMatrix();
-                    glTranslatef(i-5, 0, j);
+                    glTranslatef(i, 0, j);
                     defineCor(White);
                     glBindTexture(GL_TEXTURE_2D, idTexturaRua[Cidade[i][j].textID]);
                     drawTextCord();
@@ -493,14 +557,14 @@ void DesenhaCidade()
                 glPopMatrix();
             } else if (Cidade[i][j].tipo == PREDIO) {
                 glPushMatrix();
-                    glTranslatef(i-5, 0, j);
+                    glTranslatef(i, 0, j);
                     DesenhaLadrilho(BlueViolet, Black);
                     defineCor(Cidade[i][j].cor);
                     DesenhaPredio(Cidade[i][j].altura);
                 glPopMatrix();
             } else {
                 glPushMatrix();
-                    glTranslatef(i-5, 0, j);
+                    glTranslatef(i, 0, j);
                     DesenhaLadrilho(BlueViolet, Black);
                 glPopMatrix();
             }
@@ -526,7 +590,7 @@ void DesenhaAvioesInimigos ()
         glPushMatrix(); 
         {
             // Desenha asa 1
-            glTranslatef ( avioesInimigos[i].getPosicao().x+0.5, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            glTranslatef ( avioesInimigos[i].getPosicao().x+0.5, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.3);
             glScalef(0.4, 0.05,0.2);
             glTranslatef(0, 1, 0);
             defineCor(Gray);
@@ -537,7 +601,7 @@ void DesenhaAvioesInimigos ()
         glPushMatrix();
         {
             // Desenha asa 2
-            glTranslatef ( avioesInimigos[i].getPosicao().x-0.5, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
+            glTranslatef ( avioesInimigos[i].getPosicao().x-0.5, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.3);
             glScalef(0.4, 0.05,0.2);
             glTranslatef(0, 1, 0);
             defineCor(Gray);
@@ -548,10 +612,10 @@ void DesenhaAvioesInimigos ()
         glPushMatrix();
         {
             // Desenha helice 1 motor
-            glTranslatef ( avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.7);
-            glScalef(0.04, 0.2, 0.04);
+            glTranslatef ( avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.6);
+            glScalef(0.04, 0.2, 0.02);
             glRotatef(anguloPositivoHelice++, 0, 0, 1);
-            glTranslatef(0.04, 0.6, 0);
+            glTranslatef(0, 0.6, 0);
             defineCor(Yellow);
             DesenhaCubo();
         }
@@ -560,10 +624,10 @@ void DesenhaAvioesInimigos ()
         glPushMatrix();
         {
             // Desenha helice 2 motor
-            glTranslatef ( avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.7);
-            glScalef(0.04, 0.2, 0.04);
-            glRotatef(anguloNegativoHelice--, 0, 0, 1);
-            glTranslatef(0.04, 0.6, 0);
+            glTranslatef ( avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+0.6);
+            glScalef(0.04, 0.2, 0.02);
+            glRotatef(anguloNegativoHelice++, 0, 0, 1);
+            glTranslatef(0, 0.6, 0);
             defineCor(Yellow);
             DesenhaCubo();
         }
@@ -619,12 +683,7 @@ void SetAlvoObsPrimeiraPessoa() {
     PosicaoObservador.z = Carrinho.getPosicao().z-1;
 
     // Alvo
-    if (OlhandoParaFrente == 1) {
-        DirObservador = Carrinho.getDirecao();
-        AlvoAtual = PosicaoObservador + DirObservador * 2;
-    } else {
-        AlvoAtual = PosicaoObservador + DirCamera * 2;
-    }
+    AlvoAtual = PosicaoObservador + DirCamera * 2;
 }
 
 void SetAlvoObsTerceiraPessoa() {
@@ -726,10 +785,16 @@ void display( void )
         DesenhaCubo();
     }
     glPopMatrix();
+
     glPushMatrix(); 
     {
         defineCor(Gray);
         DesenhaAvioesInimigos();
+    }
+    glPopMatrix();
+    glPushMatrix(); 
+    {
+        drawFuelPumps();
     }
     glPopMatrix();
 	glutSwapBuffers();
@@ -767,10 +832,8 @@ void keyboard ( unsigned char key, int x, int y )
         DirCarro = Carrinho.getDirecao();
         DirCarro.rotacionaY(1);
         Carrinho.setDirecao(DirCarro);
-
-        cout << "Direcao do carro  " << endl;
-        DirCarro.imprime(); cout << endl;
-        cout << "\nAngulo do carro  " <<  Carrinho.getRotacao() << endl;
+        if (OlhandoParaFrente)
+            DirCamera = Carrinho.getDirecao();
         break;
     case 's':
         Deslocamento = Carrinho.getDirecao() * (-passo); 
@@ -781,27 +844,30 @@ void keyboard ( unsigned char key, int x, int y )
         DirCarro = Carrinho.getDirecao();
         DirCarro.rotacionaY(-1);
         Carrinho.setDirecao(DirCarro);
-
-        cout << "Direcao do carro  " << endl;
-        DirCarro.imprime(); 
-        cout << "\nAngulo do carro  " <<  Carrinho.getRotacao() << endl;
+        if (OlhandoParaFrente)
+            DirCamera = Carrinho.getDirecao();
         break;
     case 'u':
-        DirCamera = Carrinho.getDirecao();
-        DirCamera.rotacionaZ(1);
+        OlhandoParaFrente = false;
+        DirCamera.rotacionaX(1);
         break;
     case 'j':
-        DirCamera = Carrinho.getDirecao();
-        DirCamera.rotacionaZ(-1);
-        break;
-    case 'h':
-        DirCamera = Carrinho.getDirecao();
-        DirCamera.rotacionaY(-1);
+        OlhandoParaFrente = false;
+        DirCamera.rotacionaX(-1);
         break;
     case 'k':
-        DirCamera = Carrinho.getDirecao();
+        OlhandoParaFrente = false;
+        DirCamera.rotacionaY(-1);
+        break;
+    case 'h':
+        OlhandoParaFrente = false;
         DirCamera.rotacionaY(1);
         break;
+    case 'c': 
+        OlhandoParaFrente = true;
+        DirCamera = Ponto(0, 0, -1);
+    case 32:
+        PilotoAutomatico = !PilotoAutomatico;
     default:
         cout << key;
     break;

@@ -96,42 +96,7 @@ bool Instancia::getMoving() {
 }
 /*****************************************************************/
 // Draw functions
-void Instancia::desenha()
-{
-    // aplica as transformacoes geometricas no modelo
-    // desenha a geometria do objeto
-    Ponto Origem (0,0,0);
-    Ponto meuPonto = Posicao;
-    glLoadIdentity();
-    glPushMatrix();
 
-    glTranslatef(Posicao.x, Posicao.y, Posicao.z);
-    glRotatef(rotacao, 0, 0, 1); 
-
-    glScalef(Escala.x, Escala.y, Escala.z);
-    
-    InstanciaPonto(Origem, Posicao);
-     
-    // Desenha obejto 3d
-    DesenhaCubo2();
-
-    glPopMatrix();
-}
-void Instancia::desenhaNoPonto(Ponto a)
-{
-    // aplica as transformacoes geometricas no modelo
-    // desenha a geometria do objeto
-    Ponto Origem (0,0,0);
-    Ponto meuPonto = Posicao;
-    glLoadIdentity();
-    glPushMatrix();
-
-    glTranslatef(a.x, a.y, 0);
-    glRotatef(rotacao, 0, 0, 1);
-    glScalef(Escala.x, Escala.y, 0);
-
-    glPopMatrix();
-}
 // ***********************************************************
 //  void InstanciaPonto(Ponto3D *p, Ponto3D *out)
 //  Esta funcao calcula as coordenadas de um ponto no
