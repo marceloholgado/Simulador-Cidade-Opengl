@@ -35,7 +35,7 @@ using namespace std;
 #include "Temporizador.h"
 #include "Instancia.h"
 
-Temporizador T;
+Temporizador T, TFuel;
 double AccumDeltaT=0;
 
 #include "Ponto.h"
@@ -73,6 +73,7 @@ int QtdZ;
 
 // Tempo da animacao dos inimigos
 float TempoDaAnimacao;
+float TempoFuel;
 int tempo = 5;
 
 // sentido ca curva bezier 
@@ -161,16 +162,15 @@ string nomeTexturas[] = {
     "texturas/ruas/fimrua4.png",
     "texturas/ruas/linha1.png",
     "texturas/ruas/linha2.png",
-    "texturas/ruas/rua.png"
     "texturas/fuel.jpg"
 };
-int idTexturaRua[LAST_IMG];  // vetor com os identificadores das texturas
+int idTexturaRua[LAST_IMG+1];  // vetor com os identificadores das texturas
 
 // **********************************************************************
 // void CarregaTexturas()
 // **********************************************************************
 void CarregaTexturas() {
-    for(int i = 0; i < LAST_IMG; i++)
+    for(int i = 0; i <= LAST_IMG; i++)
         idTexturaRua[i] = LoadTexture(nomeTexturas[i].c_str());
 }
 
@@ -196,7 +196,6 @@ void IncializaCidade(int QtdX, int QtdZ, int &posx, int &posz) {
     for (int k = 1; k <= 10; k++) {
         for (i = 0; i < QtdX; i++) {
             for (j = 0; j < QtdZ; j++) {
-                cout << " VAZIO " << k << " " << sketchCidade->vetInfo[k].tipo << endl;
                 if (sketchCidade->matrix[i][j] == k) {
                     if (sketchCidade->vetInfo[k].tipo == VAZIO) {    
                         Cidade[i][j].tipo = VAZIO;
@@ -249,6 +248,9 @@ void InitializeCharacters(int posx, int posz) {
     Carrinho.setPosicao(Ponto(4, 0, posz));
     Carrinho.setDirecao(Ponto(0, 0, -1));
 
+    FuelPump[0].setPosicao(Ponto(0, 0, 0));
+    FuelPump[1].setPosicao(Ponto(10, 0, 10));
+
     PosicaoObservador = Carrinho.getPosicao();
     DirObservador = Carrinho.getDirecao();
     DirCamera = Carrinho.getDirecao();
@@ -277,6 +279,7 @@ void init(void)
         glEnable (GL_CULL_FACE );
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+    glEnable(GL_NORMALIZE);
     
     srand((unsigned int)time(NULL));
     
@@ -284,10 +287,6 @@ void init(void)
     QtdZ = ZCIDADE;
     
     sketchCidade->readSketch("cidade.txt");
-    cout << sketchCidade->vetInfo[1].tipo << endl;
-    cout << " SAIU DA READ" << endl;
-
-    
 
     int i, j;
     CarregaTexturas();
@@ -385,6 +384,7 @@ void animate()
     AccumDeltaT += dt;
     TempoTotal += dt;
     nFrames++;
+    int i, j;
 
     if (AccumDeltaT > 1.0/60) // fixa a atualiza��o da tela em 30
     {
@@ -398,17 +398,17 @@ void animate()
         Deslocamento.y = dt * Carrinho.getDirecao().y * passo;
         Deslocamento.z = dt * Carrinho.getDirecao().z * passo;
         Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
-        cout << "Carrinho Animando" << endl;
-        Carrinho.getPosicao().imprime();
     }
 
-    if (TempoTotal > 5.0)
+    if (TempoTotal > 10.0)
     {
-       //cout << "Tempo Acumulado: "  << TempoTotal << " segundos. " ;
-       //cout << "Nros de Frames sem desenho: " << nFrames << endl;
-       //cout << "FPS(sem desenho): " << nFrames/TempoTotal << endl;
-       //TempoTotal = 0;
-       //nFrames = 0;
+        i = rand() % XCIDADE;
+        j = rand() % ZCIDADE;
+        FuelPump[0].setPosicao(Ponto(i, 0, j));
+        i = rand() % XCIDADE;
+        j = rand() % ZCIDADE;
+        FuelPump[1].setPosicao(Ponto(i, 0, j));
+        TempoTotal = 0;
     }
     TempoDaAnimacao += dt;
 }
@@ -508,30 +508,61 @@ void drawTextCord() {
     glEnd();
 }
 
+void drawTextCordCubo() {
+    glBegin ( GL_QUADS );
+    // Front Face
+    glNormal3f(0,0,1);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    // Back Face
+    glNormal3f(0,0,-1);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+     // Top Face
+    glNormal3f(0,1,0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    // Bottom Face
+    glNormal3f(0,-1,0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    // Right face
+    glNormal3f(1,0,0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    // Left Face
+    glNormal3f(-1,0,0);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glEnd();
+}
+
 void drawFuelPumps() {
-    int x = 0;
-    bool desenha = false;
-    int valor;
-    for (int i = 0; i < XCIDADE; i++) {
-        for (int j = 0; j < ZCIDADE; j++) {
-            valor = rand() % XCIDADE;
-            if (valor % 2 == 0) {
-                desenha = true;
-            }
-            else {
-                desenha = false;
-            }
-            if (Cidade[i][j].tipo == RUA && x < FUEL && desenha) {
-                glPushMatrix();
-                    glTranslatef(i, 0, j);
-                    defineCor(White);
-                    glBindTexture(GL_TEXTURE_2D, idTexturaRua[LAST_IMG]);
-                    drawTextCord();
-                    glBindTexture(GL_TEXTURE_2D, 0);
-                glPopMatrix();
-                x++;
-            }
-        }
+
+    int i = FuelPump[0].getPosicao().x;
+    int j = FuelPump[0].getPosicao().z;
+    if (Cidade[i][j].tipo == RUA) {
+        glPushMatrix();
+            glTranslatef(FuelPump[0].getPosicao().x, 0.3, FuelPump[0].getPosicao().z);
+            glScalef(0.1, 0.1, 0.1);
+            glRotatef(angulo, 0, 1, 0);
+            defineCor(White);
+            glBindTexture(GL_TEXTURE_2D, idTexturaRua[LAST_IMG]);
+            drawTextCordCubo();
+            glBindTexture(GL_TEXTURE_2D, 0);
+        glPopMatrix();
     }
 }
 
@@ -570,6 +601,15 @@ void DesenhaCidade()
             }
         }
     }
+}
+
+void DesenhaCarrinho() {
+    glTranslatef ( Carrinho.getPosicao().x, Carrinho.getPosicao().y, Carrinho.getPosicao().z-1 );
+    glRotatef(Carrinho.getRotacao(), 0, 1, 0);
+    glScalef(0.2, 0.1,0.2);
+    glTranslatef(0, 1, 0);
+    defineCor(Red);
+    DesenhaCubo();
 }
 
 void DesenhaAvioesInimigos () 
@@ -694,7 +734,7 @@ void SetAlvoObsTerceiraPessoa() {
 
     // Obeservador 3 pesssoa
     PosicaoObservador.x = 0;
-    PosicaoObservador.y = 20;
+    PosicaoObservador.y = 10;
     PosicaoObservador.z = 0;
 }
 
@@ -761,7 +801,11 @@ void reshape( int w, int h )
 // **********************************************************************
 void display( void )
 {
-
+    double dt = 0;
+    int i;
+    int j;
+    dt = TFuel.getDeltaT();
+    
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	DefineLuz();
@@ -777,12 +821,7 @@ void display( void )
     //TracaBezier3Pontos();
     glPushMatrix(); 
     {
-        glTranslatef ( Carrinho.getPosicao().x, Carrinho.getPosicao().y, Carrinho.getPosicao().z-1 );
-        glRotatef(Carrinho.getRotacao(), 0, 1, 0);
-        glScalef(0.2, 0.1,0.2);
-        glTranslatef(0, 1, 0);
-        defineCor(Red);
-        DesenhaCubo();
+        DesenhaCarrinho();
     }
     glPopMatrix();
 
@@ -792,11 +831,14 @@ void display( void )
         DesenhaAvioesInimigos();
     }
     glPopMatrix();
+
     glPushMatrix(); 
     {
         drawFuelPumps();
     }
-    glPopMatrix();
+    glPopMatrix();  
+
+
 	glutSwapBuffers();
 }
 
