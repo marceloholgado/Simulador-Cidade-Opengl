@@ -2,4 +2,4 @@
 
     Jogue em uma simulador implementado em C++ com as bibliotecas do OpenGl.
 
-    ![alt text](fotoDoGame.png)
+    ![alt text](https://github.com/Holgado/Simulador-Cidade-Opengl/blob/main/fotoDoGame.png)
