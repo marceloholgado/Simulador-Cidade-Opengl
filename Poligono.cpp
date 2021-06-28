@@ -49,16 +49,20 @@ unsigned long Poligono::getNVertices()
     return Vertices.size();
 }
 
-//void Poligono::atualizaLimites(int minx, int miny, int xmax, int maxy, int minz, int maxz) {
+//void Poligono::atualizaLimites(int minx, int miny, int maxx, int maxy, int minz, int maxz) {
 //    Vertices.clear();
-//    Vertices.push_back(Ponto(minx,miny, minz));
-//    Vertices.push_back(Ponto(minx,maxy, s));
-//    Vertices.push_back(Ponto(xmax,maxy));
-//    Vertices.push_back(Ponto(xmax,miny));
+//    Vertices.push_back(Ponto(minx, miny, minz));
+//    Vertices.push_back(Ponto(minx, miny, maxz));
+//    Vertices.push_back(Ponto(maxx, miny, minz));
+//    Vertices.push_back(Ponto(maxx, miny, maxz));
 //}
-//
-
-
+void Poligono::atualizaLimites(int minx, int miny, int xmax, int maxy) {
+    Vertices.clear();
+    Vertices.push_back(Ponto(minx,miny));
+    Vertices.push_back(Ponto(minx,maxy));
+    Vertices.push_back(Ponto(xmax,maxy));
+    Vertices.push_back(Ponto(xmax,miny));
+}
 void Poligono::removeVertice(int p)
 {
     Vertices.erase(Vertices.begin()+p);

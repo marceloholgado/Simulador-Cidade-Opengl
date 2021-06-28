@@ -14,37 +14,6 @@ void DesenhaRetangulo();
 void InstanciaPonto(Ponto &p, Ponto &out);
 Ponto InstanciaPonto(Ponto P);
 
-Instancia::Instancia(Modelos _tipo, string filename) {
-    tipo = _tipo;
-
-    ifstream input;
-    input.open(filename, ios::in);
-    if (!input)
-    {
-        cout << "Erro ao abrir " << filename << ". " << endl;
-        exit(0);
-    }
-    cout << "Lendo arquivo " << filename << "...";
-    string S;
-    int nLinha = 0;
-    unsigned int qtdVertices;
-    
-    input >> qtdVertices;
-
-    for (int i=0; i< qtdVertices; i++)
-    {
-        double x, y, z;
-        // Le cada elemento da linha
-        input >> x >> y >> z;
-        if(!input)
-            break;
-        nLinha++;
-        objeto3d.insereVertice(Ponto(x, y, z));
-    }
-    cout << "Poligono 3D lido com sucesso!" << endl;
-    input.close();
-}
-
 /*****************************************************************/
 // Geters and Seters
 

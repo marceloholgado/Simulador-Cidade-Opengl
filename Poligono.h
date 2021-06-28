@@ -41,7 +41,7 @@ public:
     void desenhaPoligono();
     void desenhaVertices();
     void imprime();
-    //void atualizaLimites(int minx, int miny, int xmax, int maxy);
+    void atualizaLimites(int minx, int miny, int xmax, int maxy);
     void obtemLimites(Ponto &Min, Ponto &Max);
     void removeVertice(int p);
 protected:

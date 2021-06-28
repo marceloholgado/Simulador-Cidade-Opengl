@@ -94,13 +94,14 @@ float alvoview_z = 0;
 #define PREDIO 10
 #define RUA 20
 #define COMBUSTIVEL 30
+#define GRAMA 40
 
 // define quantidades 
 #define NUM_AVIOES 1
 #define NUM_ENEMIES 1
-#define XCIDADE 15
-#define ZCIDADE 16
-#define FUEL 3
+#define XCIDADE 25
+#define ZCIDADE 25
+#define MAXFUEL 3
 
 // Matriz que armazena informacoes sobre o que existe na cidade
 Elemento Cidade[100][100];
@@ -110,7 +111,7 @@ TextReader *sketchCidade = new TextReader();
 // Objetos dos que representam os personagem do jogo
 Instancia avioesInimigos[NUM_AVIOES];
 Instancia Carrinho;
-Instancia FuelPump[FUEL];
+Instancia FuelPump[MAXFUEL];
 
 float anguloPositivoHelice = 45;
 float anguloNegativoHelice = -45;
@@ -127,6 +128,7 @@ void DefinesBezierCurves(bool);
 Ponto AlvoAtual = Ponto(0,0,0);
 Ponto PosicaoObservador, DirObservador;
 float passo = 0.5;
+float gasolina = 100;
 Ponto Deslocamento;
 Ponto DirCarro;
 Ponto DirCamera;
@@ -137,92 +139,169 @@ bool PilotoAutomatico = false;
 // Constantes para indexar as texturas 
 enum PISOS {
     CROSS,
-    CURVA1,
-    CURVA2,
-    CURVA3,
-    CURVA4,
-    ENDLINE1,
-    ENDLINE2,
-    ENDLINE3,
-    ENDLINE4,
-    LINE1,
-    LINE2,
+    DL,
+    DLR,
+    DR,
+    LR,
+    NONE,
+    UD,
+    UDL,
+    UDR,
+    UL,
+    ULR,
+    UR,
+    COMB,
+    GRASS,
     LAST_IMG
 };
 // Lista de nomes das texturas
 string nomeTexturas[] = {
-    "texturas/ruas/cruzamento.png",
-    "texturas/ruas/curva1.png",
-    "texturas/ruas/curva2.png",
-    "texturas/ruas/curva3.png",
-    "texturas/ruas/curva4.png",
-    "texturas/ruas/fimrua1.png",
-    "texturas/ruas/fimrua2.png",
-    "texturas/ruas/fimrua3.png",
-    "texturas/ruas/fimrua4.png",
-    "texturas/ruas/linha1.png",
-    "texturas/ruas/linha2.png",
-    "texturas/fuel.jpg"
+    "texturas/ruas/CROSS.png",
+    "texturas/ruas/DL.png",
+    "texturas/ruas/DLR.png",
+    "texturas/ruas/DR.png",
+    "texturas/ruas/LR.png",
+    "texturas/ruas/None.png",
+    "texturas/ruas/UD.png",
+    "texturas/ruas/UDL.png",
+    "texturas/ruas/UDR.png",
+    "texturas/ruas/UL.png",
+    "texturas/ruas/ULR.png",
+    "texturas/ruas/UR.png",
+    "texturas/fuel.jpg",
+    "texturas/grama.jpg"
 };
-int idTexturaRua[LAST_IMG+1];  // vetor com os identificadores das texturas
+int idTexturaRua[LAST_IMG];  // vetor com os identificadores das texturas
 
 // **********************************************************************
 // void CarregaTexturas()
 // **********************************************************************
 void CarregaTexturas() {
-    for(int i = 0; i <= LAST_IMG; i++)
+    for(int i = 0; i < LAST_IMG; i++)
         idTexturaRua[i] = LoadTexture(nomeTexturas[i].c_str());
 }
 
-int EscolheTexturaRua(int i, int j) {
-    if (i == 3 && j == 2 || i == 3 && j == 6 || i == 3 && j == 10 || i == 3 && j == 14) {
-        return CROSS;
+int EscolheTextura(string nome) {
+
+    if (nome == "CROSS") {
+        return idTexturaRua[CROSS];
     }
-    if (i > 0 && j > 0) {
-        if (Cidade[i-1][j].tipo == RUA && Cidade[i-1][j].tipo == RUA && Cidade[i][j+1].tipo == PREDIO && Cidade[i][j-1].tipo == PREDIO) {
-            return LINE1;
-        }
-        if ((i == 0 || i == XCIDADE-1) && (Cidade[i-1][j].tipo == PREDIO || Cidade[i-1][j].tipo == VAZIO) || (Cidade[i+1][j].tipo == PREDIO || Cidade[i+1][j].tipo == VAZIO)) {
-            return LINE2;
-        }
-    } else {
-        return LINE2;
+    else if (nome == "DL") {
+        return idTexturaRua[DL];
+    }
+    else if (nome == "DLR") {
+        return idTexturaRua[DLR];
+    }
+    else if (nome == "DR") {
+        return idTexturaRua[DR];
+    }
+    else if (nome == "LR") {
+        return idTexturaRua[LR];
+    }
+    else if (nome == "UD") {
+        return idTexturaRua[UD];
+    }
+    else if (nome == "UDL") {
+        return idTexturaRua[UDL];
+    }
+    else if (nome == "UDR") {
+        return idTexturaRua[UDR];
+    }
+    else if (nome == "UL") {
+        return idTexturaRua[UL];
+    }
+    else if (nome == "ULR") {
+        return idTexturaRua[ULR];
+    }
+    else if (nome == "UR") {
+        return idTexturaRua[UR];
+    }
+    else if (nome == "10") {
+        return idTexturaRua[GRASS];
+    }
+    else {
+        return idTexturaRua[NONE];
     }
 }
+int VerificaTipo(string nome) {
+
+    if (nome == "CROSS") {
+        return RUA;
+    }
+    else if (nome == "DL") {
+        return RUA;
+    }
+    else if (nome == "DLR") {
+       return RUA;
+    }
+    else if (nome == "DR") {
+        return RUA;
+    }
+    else if (nome == "LR") {
+        return RUA;
+    }
+    else if (nome == "NONE") {
+        return RUA;
+    }
+    else if (nome == "UD") {
+        return RUA;
+    }
+    else if (nome == "UDL") {
+        return RUA;
+    }
+    else if (nome == "UDR") {
+        return RUA;
+    }
+    else if (nome == "UL") {
+        return RUA;
+    }
+    else if (nome == "ULR") {
+        return RUA;
+    }
+    else if (nome == "UR") {
+        return RUA;
+    }
+    else if (nome == "10") {
+        return GRAMA;
+    } else {
+        return PREDIO;
+    }
+}
+
 // **********************************************************************
 void IncializaCidade(int QtdX, int QtdZ, int &posx, int &posz) {
     cout << "Incializa cidade" << endl;
-    int i, j;
-    for (int k = 1; k <= 10; k++) {
-        for (i = 0; i < QtdX; i++) {
-            for (j = 0; j < QtdZ; j++) {
-                if (sketchCidade->matrix[i][j] == k) {
-                    if (sketchCidade->vetInfo[k].tipo == VAZIO) {    
-                        Cidade[i][j].tipo = VAZIO;
-                        Cidade[i][j].cor = sketchCidade->vetInfo[k].cor;
-                        Cidade[i][j].altura = sketchCidade->vetInfo[k].altura;
-                    } 
-                    else if (sketchCidade->vetInfo[k].tipo == PREDIO) {
-                        Cidade[i][j].tipo = PREDIO;
-                        Cidade[i][j].cor = sketchCidade->vetInfo[k].cor;
-                        Cidade[i][j].altura = sketchCidade->vetInfo[k].altura;
-                    }
-                    else if (sketchCidade->vetInfo[k].tipo == RUA) {
-                        Cidade[i][j].tipo = RUA;
-                        Cidade[i][j].cor = sketchCidade->vetInfo[k].cor;
-                        Cidade[i][j].altura = sketchCidade->vetInfo[k].altura;
-                        Cidade[i][j].textID = EscolheTexturaRua(i, j);
-                    }
-                }
+    int i, j, val, index;
+    for (i = 0; i < QtdX; i++) {
+        for (j = 0; j < QtdZ; j++) {
+            
+            val = VerificaTipo(sketchCidade->matrix[i][j]);
+            
+            if (val  == PREDIO) {
+                index = stoi(sketchCidade->matrix[i][j]);
+                Cidade[i][j].tipo = PREDIO;
+                Cidade[i][j].cor = sketchCidade->vetInfo[index].cor;
+                Cidade[i][j].altura = sketchCidade->vetInfo[index].altura;
+            } else if (val == RUA) {
+                Cidade[i][j].tipo = RUA;
+                Cidade[i][j].cor = 0;
+                Cidade[i][j].altura = 0;
+                Cidade[i][j].textID = EscolheTextura(sketchCidade->matrix[i][j]);
+            } 
+            else if (val == GRAMA) {
+                Cidade[i][j].tipo = GRAMA;
+                Cidade[i][j].cor = 0;
+                Cidade[i][j].altura = 0;
+                Cidade[i][j].textID = EscolheTextura(sketchCidade->matrix[i][j]);
             }
-        } 
-    }
+        }
+    } 
     posx = i;
     posz = j;
 }
 
 void InitializeCharacters(int posx, int posz) {
-    int i, cont = 0;
+    int i, cont = 0, newposx, newposz;
     for (i = 0; i < NUM_AVIOES; i++) {
         avioesInimigos[i] = Instancia();
         if (i < NUM_ENEMIES) {
@@ -240,6 +319,15 @@ void InitializeCharacters(int posx, int posz) {
         avioesInimigos[i].pontosBezier[1] = Ponto (0, 4+i, 0);
         avioesInimigos[i].pontosBezier[2] = Ponto (0, 4+i, 0);
     }
+    i = 0;
+    while (i < MAXFUEL) {
+        newposx = rand() % XCIDADE;
+        newposz = rand() % ZCIDADE;
+        if (Cidade[newposx][newposz].tipo == RUA) {
+            FuelPump[i].setPosicao(Ponto(newposx, 0, newposz));
+            i++;
+        }
+    }
 
     Carrinho = Instancia();
     Carrinho.setRotacao(0);
@@ -247,9 +335,6 @@ void InitializeCharacters(int posx, int posz) {
     Carrinho.setMoving(true);
     Carrinho.setPosicao(Ponto(4, 0, posz));
     Carrinho.setDirecao(Ponto(0, 0, -1));
-
-    FuelPump[0].setPosicao(Ponto(0, 0, 0));
-    FuelPump[1].setPosicao(Ponto(10, 0, 10));
 
     PosicaoObservador = Carrinho.getPosicao();
     DirObservador = Carrinho.getDirecao();
@@ -285,11 +370,12 @@ void init(void)
     
     QtdX = XCIDADE;
     QtdZ = ZCIDADE;
-    
-    sketchCidade->readSketch("cidade.txt");
+    CarregaTexturas();
+   
+    sketchCidade->readSketch("cidade2.txt");
 
     int i, j;
-    CarregaTexturas();
+
     IncializaCidade(QtdX, QtdZ, i, j);
     
     InitializeCharacters(i, j);
@@ -333,24 +419,12 @@ void DefinesBezierCurves(bool curveDireciton) {
             avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
             avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x + XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
             avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+ZCIDADE);
-            cout << "Indo\nPonto 0"; avioesInimigos[i].pontosBezier[0].imprime();
-            cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
-            cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
         } else {
             avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
             avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x - XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
             avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z-ZCIDADE);
-            cout << "Vindo\nPonto 0"; avioesInimigos[i].pontosBezier[0].imprime();
-            cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
-            cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
+            
          }
-        //cout << "Ponto 0"; avioesInimigos[i].pontosBezier[0].imprime();
-        //cout << "\nPonto 1"; avioesInimigos[i].pontosBezier[1].imprime();
-        //cout << "\nPonto 2"; avioesInimigos[i].pontosBezier[2].imprime();
-
-        cout << "\nPOSICAO AVIAO ";
-        avioesInimigos[i].getPosicao().imprime();
-        cout << "\n";
     }
 }
 // **********************************************************************
@@ -376,6 +450,27 @@ void AnimateAndUpdateCharacters(double dt) {
     AvancaComBezier();
 }
 
+bool Colisao(float Ax, float Az, float Acomp, float Aalt, float Bx, float Bz, float Bcomp, float Balt) {
+    if (Az + Aalt < Bz) return false;
+    else if (Az > Bz+Balt) return false;
+    else if (Ax+Acomp < Bx) return false;
+    else if (Ax > Bx+Bcomp) return false;
+
+    return true;
+}
+
+
+void DetectaColisaoFuel() {
+    float newposx, newposz;
+    for (int i = 0; i < MAXFUEL; i++) {
+        if (Colisao(Carrinho.getPosicao().x,Carrinho.getPosicao().z-1, 0.2, 0.2,FuelPump[i].getPosicao().x,FuelPump[i].getPosicao().z, 0.1, 0.1)) {
+            newposx = rand() % XCIDADE;
+            newposz = rand() % ZCIDADE;
+            FuelPump[i].setPosicao(Ponto(newposx, 0, newposz));
+            gasolina += 0.10;
+        }
+    }
+}
 // **********************************************************************
 void animate()
 {
@@ -393,23 +488,16 @@ void animate()
         glutPostRedisplay();
     }
     AnimateAndUpdateCharacters(dt);
-    if (PilotoAutomatico) {
+    DetectaColisaoFuel();
+
+    if (PilotoAutomatico && gasolina > 0) {
         Deslocamento.x = dt * Carrinho.getDirecao().x * passo;
         Deslocamento.y = dt * Carrinho.getDirecao().y * passo;
         Deslocamento.z = dt * Carrinho.getDirecao().z * passo;
         Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
+        gasolina -= passo;
     }
 
-    if (TempoTotal > 10.0)
-    {
-        i = rand() % XCIDADE;
-        j = rand() % ZCIDADE;
-        FuelPump[0].setPosicao(Ponto(i, 0, j));
-        i = rand() % XCIDADE;
-        j = rand() % ZCIDADE;
-        FuelPump[1].setPosicao(Ponto(i, 0, j));
-        TempoTotal = 0;
-    }
     TempoDaAnimacao += dt;
 }
 // **********************************************************************
@@ -550,19 +638,21 @@ void drawTextCordCubo() {
 }
 
 void drawFuelPumps() {
-
-    int i = FuelPump[0].getPosicao().x;
-    int j = FuelPump[0].getPosicao().z;
-    if (Cidade[i][j].tipo == RUA) {
-        glPushMatrix();
-            glTranslatef(FuelPump[0].getPosicao().x, 0.3, FuelPump[0].getPosicao().z);
-            glScalef(0.1, 0.1, 0.1);
-            glRotatef(angulo, 0, 1, 0);
-            defineCor(White);
-            glBindTexture(GL_TEXTURE_2D, idTexturaRua[LAST_IMG]);
-            drawTextCordCubo();
-            glBindTexture(GL_TEXTURE_2D, 0);
-        glPopMatrix();
+    float x, z;
+    for (int i = 0; i < MAXFUEL; i++) {
+        x = FuelPump[i].getPosicao().x;
+        z = FuelPump[i].getPosicao().z;
+        if (Cidade[int(x)][int(z)].tipo == RUA) {
+            glPushMatrix();
+                glTranslatef(x, 0.1, z);
+                glScalef(0.1, 0.1, 0.1);
+                glRotatef(angulo, 0, 1, 0);
+                defineCor(White);
+                glBindTexture(GL_TEXTURE_2D, idTexturaRua[COMB]);
+                drawTextCordCubo();
+                glBindTexture(GL_TEXTURE_2D, 0);
+            glPopMatrix();
+        }
     }
 }
 
@@ -582,16 +672,26 @@ void DesenhaCidade()
                 glPushMatrix();
                     glTranslatef(i, 0, j);
                     defineCor(White);
-                    glBindTexture(GL_TEXTURE_2D, idTexturaRua[Cidade[i][j].textID]);
+                    glBindTexture(GL_TEXTURE_2D, Cidade[i][j].textID);
                     drawTextCord();
                     glBindTexture(GL_TEXTURE_2D, 0);
                 glPopMatrix();
-            } else if (Cidade[i][j].tipo == PREDIO) {
+            } 
+            else if (Cidade[i][j].tipo == PREDIO) {
                 glPushMatrix();
                     glTranslatef(i, 0, j);
                     DesenhaLadrilho(BlueViolet, Black);
                     defineCor(Cidade[i][j].cor);
                     DesenhaPredio(Cidade[i][j].altura);
+                glPopMatrix();
+            }
+            else if (Cidade[i][j].tipo == GRAMA) {
+                glPushMatrix();
+                    glTranslatef(i, 0, j);
+                    defineCor(White);
+                    glBindTexture(GL_TEXTURE_2D, Cidade[i][j].textID);
+                    drawTextCord();
+                    glBindTexture(GL_TEXTURE_2D, 0);
                 glPopMatrix();
             } else {
                 glPushMatrix();
@@ -604,7 +704,7 @@ void DesenhaCidade()
 }
 
 void DesenhaCarrinho() {
-    glTranslatef ( Carrinho.getPosicao().x, Carrinho.getPosicao().y, Carrinho.getPosicao().z-1 );
+    glTranslatef ( Carrinho.getPosicao().x, Carrinho.getPosicao().y, Carrinho.getPosicao().z -1 );
     glRotatef(Carrinho.getRotacao(), 0, 1, 0);
     glScalef(0.2, 0.1,0.2);
     glTranslatef(0, 1, 0);
