@@ -53,7 +53,7 @@ GLfloat AspectRatio, angulo=0;
 // pela tecla 'p'
 
 int ModoDeProjecao = 0;
-
+GLfloat AlturaViewportDeMensagens = 0.1; // percentual em relacao ˆ altura da tela
 // Controle do modo de projecao
 // 0: Wireframe; 1: Faces preenchidas
 // A funcao "Init" utiliza esta variavel. O valor dela eh alterado
@@ -128,7 +128,7 @@ void DefinesBezierCurves(bool);
 Ponto AlvoAtual = Ponto(0,0,0);
 Ponto PosicaoObservador, DirObservador;
 float passo = 0.5;
-float gasolina = 100;
+int gasolina = 100;
 Ponto Deslocamento;
 Ponto DirCarro;
 Ponto DirCamera;
@@ -467,7 +467,7 @@ void DetectaColisaoFuel() {
             newposx = rand() % XCIDADE;
             newposz = rand() % ZCIDADE;
             FuelPump[i].setPosicao(Ponto(newposx, 0, newposz));
-            gasolina += 0.10;
+            gasolina++;
         }
     }
 }
@@ -495,9 +495,11 @@ void animate()
         Deslocamento.y = dt * Carrinho.getDirecao().y * passo;
         Deslocamento.z = dt * Carrinho.getDirecao().z * passo;
         Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
-        gasolina -= passo;
     }
-
+    if (TempoTotal > 5) {
+        gasolina --;
+        TempoTotal = 0;
+    }
     TempoDaAnimacao += dt;
 }
 // **********************************************************************
@@ -894,6 +896,69 @@ void reshape( int w, int h )
 
 }
 
+void printString(string s, int posX, int posY, int cor)
+{
+    defineCor(cor);
+    
+    glRasterPos3i(posX, posY, 0); //define posicao na tela
+    for (int i = 0; i < s.length(); i++)
+    {
+//GLUT_BITMAP_HELVETICA_10,
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
+    }
+    
+}
+
+// **********************************************************************
+//
+// **********************************************************************
+void DesenhaEm2D()
+{
+    int ativarLuz = false;
+    if (glIsEnabled(GL_LIGHTING))
+    {
+        glDisable(GL_LIGHTING);
+        ativarLuz = true;
+    }
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    // Salva o tamanho da janela
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+    
+    // Define a area a ser ocupada pela area OpenGL dentro da Janela
+    glViewport(0, 0, w, h*AlturaViewportDeMensagens); // a janela de mensagens fica na parte de baixo da janela
+
+    // Define os limites logicos da area OpenGL dentro da Janela
+    glOrtho(0,10, 0,10, 0,1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Desenha linha que Divide as ‡reas 2D e 3D
+    defineCor(White);
+    glLineWidth(5);
+    glBegin(GL_LINES);
+        glVertex2f(0,10);
+        glVertex2f(10,10);
+    glEnd();
+    
+    setprecision(2);
+    
+    string gasolina_restante = "GASOLINA " + to_string(gasolina);
+
+    printString(gasolina_restante, 0, 0, Yellow);
+
+    // Resataura os par‰metro que foram alterados
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glViewport(0, h*AlturaViewportDeMensagens, w, h-h*AlturaViewportDeMensagens);
+
+    if (ativarLuz)
+        glEnable(GL_LIGHTING);
+
+}
 // **********************************************************************
 //  void display( void )
 //
@@ -938,7 +1003,7 @@ void display( void )
     }
     glPopMatrix();  
 
-
+    DesenhaEm2D();
 	glutSwapBuffers();
 }
 
