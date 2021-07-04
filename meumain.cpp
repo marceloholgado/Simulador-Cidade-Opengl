@@ -60,9 +60,9 @@ GLfloat AlturaViewportDeMensagens = 0.1; // percentual em relacao ˆ altura da t
 // pela tecla 'w'
 int ModoDeExibicao = 1;
 
-double nFrames=0;
-double TempoTotal=0;
-
+double nFrames = 0;
+double TempoTotal = 0;
+double TempoTiros = 0;
 Ponto Curva1[3];
 Ponto Curva2[3];
 Ponto Max, Min;
@@ -73,8 +73,10 @@ int QtdZ;
 
 // Tempo da animacao dos inimigos
 float TempoDaAnimacao;
-float TempoFuel;
+float TempoDaAnimacao2;
+int tempoBala = 0;
 int tempo = 5;
+int indiceBala = 0;
 
 // sentido ca curva bezier 
 bool way = false;
@@ -95,13 +97,14 @@ float alvoview_z = 0;
 #define RUA 20
 #define COMBUSTIVEL 30
 #define GRAMA 40
+#define HOLE 50
 
 // define quantidades 
-#define NUM_AVIOES 1
-#define NUM_ENEMIES 1
+#define NUM_AVIOES 3
+#define NUM_ENEMIES 3
 #define XCIDADE 25
 #define ZCIDADE 25
-#define MAXFUEL 3
+#define MAXFUEL 10
 
 // Matriz que armazena informacoes sobre o que existe na cidade
 Elemento Cidade[100][100];
@@ -110,14 +113,18 @@ TextReader *sketchCidade = new TextReader();
 
 // Objetos dos que representam os personagem do jogo
 Instancia avioesInimigos[NUM_AVIOES];
+Instancia tirosInimigos[NUM_AVIOES];
 Instancia Carrinho;
 Instancia FuelPump[MAXFUEL];
 
 float anguloPositivoHelice = 45;
 float anguloNegativoHelice = -45;
+int contaCurvas = 0;
+float anguloAvioes[NUM_AVIOES];
 bool aumentax = true, diminuix = false;
 bool aumentaz = false, diminuiz = false;
 int x, z;
+int indexAviao;
 
 
 // definicoes de algumas funcoes
@@ -152,6 +159,8 @@ enum PISOS {
     UR,
     COMB,
     GRASS,
+    FIRE,
+    BURACO,
     LAST_IMG
 };
 // Lista de nomes das texturas
@@ -169,7 +178,9 @@ string nomeTexturas[] = {
     "texturas/ruas/ULR.png",
     "texturas/ruas/UR.png",
     "texturas/fuel.jpg",
-    "texturas/grama.jpg"
+    "texturas/grama.jpg",
+    "texturas/fire.jpg",
+    "texturas/hole.png"
 };
 int idTexturaRua[LAST_IMG];  // vetor com os identificadores das texturas
 
@@ -336,6 +347,7 @@ void InitializeCharacters(int posx, int posz) {
     Carrinho.setPosicao(Ponto(4, 0, posz));
     Carrinho.setDirecao(Ponto(0, 0, -1));
 
+
     PosicaoObservador = Carrinho.getPosicao();
     DirObservador = Carrinho.getDirecao();
     DirCamera = Carrinho.getDirecao();
@@ -379,6 +391,7 @@ void init(void)
     IncializaCidade(QtdX, QtdZ, i, j);
     
     InitializeCharacters(i, j);
+    tempoBala = 5;
 }
 // Calculos Bezier
 // **********************************************************************
@@ -402,32 +415,38 @@ void TracaBezier3Pontos()
     
     while(t<1.0)
     {
-        P = CalculaBezier3(Curva1, t);
+        P = CalculaBezier3(tirosInimigos[0].pontosBezier, t);
         glVertex3f(P.x, P.y, P.z);
         t += DeltaT;
        // P.imprime(); cout << endl;
     }
-    P = CalculaBezier3(Curva1, 1.0); // faz o fechamento da curva
+    P = CalculaBezier3(tirosInimigos[0].pontosBezier, 1.0); // faz o fechamento da curva
     glVertex3f(P.x, P.y, P.z);
     glEnd();
 }
 // **********************************************************************
 void DefinesBezierCurves(bool curveDireciton) {
-
+    Ponto DirAviao;
     for (int i = 0; i < NUM_AVIOES; i++) {
         if (curveDireciton) {
             avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
-            avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x + XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
-            avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z+ZCIDADE);
-        } else {
+            avioesInimigos[i].pontosBezier[1] = Ponto ((rand() % XCIDADE), avioesInimigos[i].getPosicao().y, (rand() % ZCIDADE));
+            avioesInimigos[i].pontosBezier[2] = Ponto ((rand() % XCIDADE), avioesInimigos[i].getPosicao().y, (rand() % ZCIDADE));
+            avioesInimigos[i].setRotacao(avioesInimigos[i].getRotacao()+180);
+            DirAviao.rotacionaY(180);
+        } 
+         else {
             avioesInimigos[i].pontosBezier[0] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
-            avioesInimigos[i].pontosBezier[1] = Ponto (avioesInimigos[i].getPosicao().x - XCIDADE, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z);
-            avioesInimigos[i].pontosBezier[2] = Ponto (avioesInimigos[i].getPosicao().x, avioesInimigos[i].getPosicao().y, avioesInimigos[i].getPosicao().z-ZCIDADE);
-            
-         }
+            avioesInimigos[i].pontosBezier[1] = Ponto ((rand() % XCIDADE), avioesInimigos[i].getPosicao().y, (rand() % ZCIDADE));
+            avioesInimigos[i].pontosBezier[2] = Ponto ((rand() % XCIDADE), avioesInimigos[i].getPosicao().y, (rand() % ZCIDADE)); 
+            avioesInimigos[i].setRotacao(avioesInimigos[i].getRotacao()-180);
+            DirAviao.rotacionaY(-180);
+        }
+        DirAviao = avioesInimigos[i].getDirecao();
     }
 }
 // **********************************************************************
+
 void AvancaComBezier()
 {
     double t;
@@ -436,7 +455,7 @@ void AvancaComBezier()
     if (t > 1.0) {
         DefinesBezierCurves(way);
         TempoDaAnimacao = 0;
-        way = !way;
+        way =! way;
     }
 
     for (int i = 0; i < NUM_AVIOES; i++) {
@@ -446,6 +465,32 @@ void AvancaComBezier()
 // **********************************************************************
 //  Funcoes de animacao
 //
+void AnimaTirosInimigos() {
+    // BULLET
+    double t;
+    t = TempoDaAnimacao2/tempoBala;
+    if (t > 1.0) {
+        tirosInimigos[indexAviao].pontosBezier[0] = Ponto(avioesInimigos[indexAviao].getPosicao().x, avioesInimigos[indexAviao].getPosicao().y, avioesInimigos[indexAviao].getPosicao().z);
+        tirosInimigos[indexAviao].pontosBezier[1] = Ponto(avioesInimigos[indexAviao].getPosicao().x, 2, avioesInimigos[indexAviao].getPosicao().z);
+        tirosInimigos[indexAviao].pontosBezier[2] = Ponto(avioesInimigos[indexAviao].getPosicao().x, 0, avioesInimigos[indexAviao].getPosicao().z); 
+        tirosInimigos[indexAviao].setMoving(false);
+        TempoDaAnimacao2 = 0;
+    }
+    tirosInimigos[indexAviao].setPosicao(CalculaBezier3(tirosInimigos[indexAviao].pontosBezier, t));
+    
+    if (tirosInimigos[indexAviao].getPosicao().y > 0) {
+        if (Cidade[int(tirosInimigos[indexAviao].getPosicao().x)][int(tirosInimigos[indexAviao].getPosicao().z)].tipo == RUA) {
+
+            Cidade[int(tirosInimigos[indexAviao].getPosicao().x)][int(tirosInimigos[indexAviao].getPosicao().z)].tipo = HOLE;
+       
+        } else if (Cidade[int(tirosInimigos[indexAviao].getPosicao().x)][int(tirosInimigos[indexAviao].getPosicao().z)].tipo == PREDIO) {
+
+            Cidade[int(tirosInimigos[indexAviao].getPosicao().x)][int(tirosInimigos[indexAviao].getPosicao().z)].tipo = VAZIO;
+        
+        }
+    }
+}
+
 void AnimateAndUpdateCharacters(double dt) {
     AvancaComBezier();
 }
@@ -467,7 +512,7 @@ void DetectaColisaoFuel() {
             newposx = rand() % XCIDADE;
             newposz = rand() % ZCIDADE;
             FuelPump[i].setPosicao(Ponto(newposx, 0, newposz));
-            gasolina++;
+            gasolina = gasolina + 5;
         }
     }
 }
@@ -478,6 +523,7 @@ void animate()
     dt = T.getDeltaT();
     AccumDeltaT += dt;
     TempoTotal += dt;
+    TempoTiros += dt;
     nFrames++;
     int i, j;
 
@@ -489,18 +535,33 @@ void animate()
     }
     AnimateAndUpdateCharacters(dt);
     DetectaColisaoFuel();
+    AnimaTirosInimigos();
 
     if (PilotoAutomatico && gasolina > 0) {
         Deslocamento.x = dt * Carrinho.getDirecao().x * passo;
         Deslocamento.y = dt * Carrinho.getDirecao().y * passo;
         Deslocamento.z = dt * Carrinho.getDirecao().z * passo;
-        Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
+        
+        int testx = trunc(Carrinho.getPosicao().x + Deslocamento.x + 0.05);
+        int testz = trunc(Carrinho.getPosicao().z + Deslocamento.z + 0.05);
+        
+        if (Cidade[testx][testz].tipo == RUA) {
+                Carrinho.setPosicao(Carrinho.getPosicao() + Deslocamento);
+        } 
     }
-    if (TempoTotal > 5) {
-        gasolina --;
+    if (TempoTiros > 10) {
+        indexAviao = rand() % NUM_AVIOES;
+        
+        TempoTiros = 0;
+    }
+    if (TempoTotal > 5 && PilotoAutomatico) {
+        if (gasolina > 0)
+            gasolina--;
+
         TempoTotal = 0;
     }
     TempoDaAnimacao += dt;
+    TempoDaAnimacao2 += dt;
 }
 // **********************************************************************
 //  void DesenhaCubo()
@@ -657,6 +718,18 @@ void drawFuelPumps() {
         }
     }
 }
+void DesenhaTirosInimigos() {
+    glPushMatrix();
+        glTranslatef ( tirosInimigos[indexAviao].getPosicao().x, tirosInimigos[indexAviao].getPosicao().y, tirosInimigos[indexAviao].getPosicao().z);
+        glScalef(0.05, 0.05, 0.05);
+        glRotatef(angulo, 0, 1, 0);
+        defineCor(White);
+        glBindTexture(GL_TEXTURE_2D, idTexturaRua[FIRE]);
+        drawTextCordCubo();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        
+    glPopMatrix();
+}
 
 // **********************************************************************
 // DesenhaCidade()
@@ -695,6 +768,14 @@ void DesenhaCidade()
                     drawTextCord();
                     glBindTexture(GL_TEXTURE_2D, 0);
                 glPopMatrix();
+            } else if (Cidade[i][j].tipo == HOLE) {
+                glPushMatrix();
+                    glTranslatef(i, 0, j);
+                    defineCor(White);
+                    glBindTexture(GL_TEXTURE_2D, idTexturaRua[BURACO]);
+                    drawTextCord();
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                glPopMatrix();
             } else {
                 glPushMatrix();
                     glTranslatef(i, 0, j);
@@ -716,8 +797,8 @@ void DesenhaCarrinho() {
 
 void DesenhaAvioesInimigos () 
 {
-   
     for (int i = 0; i < NUM_AVIOES; i++) {   
+        glRotatef(avioesInimigos[i].getRotacao(),0,1,0);
         glPushMatrix(); 
         {
             // Desenha corpo do aviao
@@ -728,7 +809,7 @@ void DesenhaAvioesInimigos ()
             DesenhaCubo();
         }
         glPopMatrix();
-       
+
         glPushMatrix(); 
         {
             // Desenha asa 1
@@ -739,7 +820,7 @@ void DesenhaAvioesInimigos ()
             DesenhaCubo();
         }
         glPopMatrix();
-      
+
         glPushMatrix();
         {
             // Desenha asa 2
@@ -750,7 +831,7 @@ void DesenhaAvioesInimigos ()
             DesenhaCubo();
         }
         glPopMatrix();
-        
+
         glPushMatrix();
         {
             // Desenha helice 1 motor
@@ -928,7 +1009,7 @@ void DesenhaEm2D()
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     
     // Define a area a ser ocupada pela area OpenGL dentro da Janela
-    glViewport(0, 0, w, h*AlturaViewportDeMensagens); // a janela de mensagens fica na parte de baixo da janela
+    glViewport(0, 0, h, h*AlturaViewportDeMensagens); // a janela de mensagens fica na parte de baixo da janela
 
     // Define os limites logicos da area OpenGL dentro da Janela
     glOrtho(0,10, 0,10, 0,1);
@@ -1001,7 +1082,11 @@ void display( void )
     {
         drawFuelPumps();
     }
-    glPopMatrix();  
+    glPopMatrix();
+
+    glPushMatrix();
+        DesenhaTirosInimigos();
+    glPopMatrix();
 
     DesenhaEm2D();
 	glutSwapBuffers();
@@ -1073,8 +1158,13 @@ void keyboard ( unsigned char key, int x, int y )
     case 'c': 
         OlhandoParaFrente = true;
         DirCamera = Ponto(0, 0, -1);
+        break;
+    case 'q': 
+        cout << "Posicao "; Carrinho.getPosicao().imprime();
+        break;
     case 32:
         PilotoAutomatico = !PilotoAutomatico;
+        TempoTotal = 0;
     default:
         cout << key;
     break;
@@ -1112,7 +1202,7 @@ int main ( int argc, char** argv )
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB );
 	glutInitWindowPosition (0,0);
 	glutInitWindowSize  ( 700, 700 );
-	glutCreateWindow    ( "Computacao Grafica - Exemplo Basico 3D" ); 
+	glutCreateWindow    ( "Computacao Grafica - Simulador de Cidade 3D" ); 
 		
 	init ();
     //system("pwd");
