@@ -17,7 +17,7 @@
 #include <GLUT/glut.h>
 #endif
 
-#include "ImageClass.h"
+#include "..\lib\ImageClass.h"
 
 
 void ImageClass::SetColorMode()

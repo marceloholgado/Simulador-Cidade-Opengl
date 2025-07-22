@@ -1,5 +1,5 @@
 
-#include "TextureClass.h"
+#include "..\lib\TextureClass.h"
 
 // **********************************************************************
 //  GLuint LoadTexture (const char *nomeTex)
@@ -17,7 +17,7 @@ GLuint LoadTexture (const char *nomeTex)
     glPixelStorei ( GL_UNPACK_ALIGNMENT, 1 );
 
     // Gera um identificar para a textura
-    glGenTextures (1, &IdTEX); //  vetor que guardas os números das texturas
+    glGenTextures (1, &IdTEX); //  vetor que guardas os nï¿½meros das texturas
     errorCode =  glGetError();
     if (errorCode == GL_INVALID_OPERATION)
     {
@@ -25,9 +25,9 @@ GLuint LoadTexture (const char *nomeTex)
         return -1;
     }
 
-    // Define que tipo de textura será usada
-    // GL_TEXTURE_2D ==> define que será usada uma textura 2D (bitmaps)
-    // texture_id[OBJETO_ESQUERDA]  ==> define o número da textura
+    // Define que tipo de textura serï¿½ usada
+    // GL_TEXTURE_2D ==> define que serï¿½ usada uma textura 2D (bitmaps)
+    // texture_id[OBJETO_ESQUERDA]  ==> define o nï¿½mero da textura
     glBindTexture ( GL_TEXTURE_2D, IdTEX );
 
     // Carrega a imagem

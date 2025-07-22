@@ -18,7 +18,7 @@ using namespace std;
 
 #ifdef WIN32
 #include <windows.h>
-#include <glut.h>
+#include <gl/glut.h>
 #else
 #include <sys/time.h>
 #endif
@@ -38,12 +38,12 @@ using namespace std;
 Temporizador T, TFuel;
 double AccumDeltaT=0;
 
-#include "Ponto.h"
-#include "ListaDeCoresRGB.h"
-#include "Elemento.h"
-#include "TextReader.h"
-#include "SOIL/SOIL.h"
-#include "TextureClass.h"
+#include "..\lib\Ponto.h"
+#include "..\lib\ListaDeCoresRGB.h"
+#include "..\lib\Elemento.h"
+#include "..\lib\TextReader.h"
+#include "..\SOIL/SOIL.h"
+#include "..\lib\TextureClass.h"
 
 GLfloat AspectRatio, angulo=0;
 
@@ -165,22 +165,22 @@ enum PISOS {
 };
 // Lista de nomes das texturas
 string nomeTexturas[] = {
-    "texturas/ruas/CROSS.png",
-    "texturas/ruas/DL.png",
-    "texturas/ruas/DLR.png",
-    "texturas/ruas/DR.png",
-    "texturas/ruas/LR.png",
-    "texturas/ruas/None.png",
-    "texturas/ruas/UD.png",
-    "texturas/ruas/UDL.png",
-    "texturas/ruas/UDR.png",
-    "texturas/ruas/UL.png",
-    "texturas/ruas/ULR.png",
-    "texturas/ruas/UR.png",
-    "texturas/fuel.jpg",
-    "texturas/grama.jpg",
-    "texturas/fire.jpg",
-    "texturas/hole.png"
+    "../texturas/ruas/CROSS.png",
+    "../texturas/ruas/DL.png",
+    "../texturas/ruas/DLR.png",
+    "../texturas/ruas/DR.png",
+    "../texturas/ruas/LR.png",
+    "../texturas/ruas/None.png",
+    "../texturas/ruas/UD.png",
+    "../texturas/ruas/UDL.png",
+    "../texturas/ruas/UDR.png",
+    "../texturas/ruas/UL.png",
+    "../texturas/ruas/ULR.png",
+    "../texturas/ruas/UR.png",
+    "../texturas/fuel.jpg",
+    "../texturas/grama.jpg",
+    "../texturas/fire.jpg",
+    "../texturas/hole.png"
 };
 int idTexturaRua[LAST_IMG];  // vetor com os identificadores das texturas
 
@@ -384,7 +384,7 @@ void init(void)
     QtdZ = ZCIDADE;
     CarregaTexturas();
    
-    sketchCidade->readSketch("cidade2.txt");
+    sketchCidade->readSketch("../cidade2.txt");
 
     int i, j;
 

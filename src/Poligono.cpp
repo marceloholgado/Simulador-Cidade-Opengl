@@ -6,7 +6,7 @@
 //  Copyright © 2020 Márcio Sarroglia Pinho. All rights reserved.
 //
 
-#include "Poligono.h"
+#include "..\lib\Poligono.h"
 
 Poligono::Poligono()
 {

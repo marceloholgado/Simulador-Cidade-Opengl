@@ -30,7 +30,7 @@ seguintes clausulas nas configuraces do Linker:
 #include <GL/glut.h>
 #endif
 
-#include "SOIL/SOIL.h"
+#include "../SOIL/SOIL.h"
 
 class Image {
 private:

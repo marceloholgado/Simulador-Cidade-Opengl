@@ -6,7 +6,7 @@
 //  Copyright © 2020 Márcio Sarroglia Pinho. All rights reserved.
 //
 
-#include "Instancia.h"
+#include "..\lib\Instancia.h"
 
 void DesenhaCubo2();
 void DesenhaPersonagem();

@@ -15,7 +15,7 @@ using namespace std;
 
 #ifdef WIN32
 #include <windows.h>
-#include <glut.h>
+#include <gl/glut.h>
 #endif
 
 #ifdef __APPLE__
